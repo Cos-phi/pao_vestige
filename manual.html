@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=750">
+<link rel="icon" href="image/favicon.ico">
+<title>pao_vestige — manual</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #d1d5db;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0 0 48px;
+    gap: 6px;
+  }
+
+  /* topbar */
+  #topbar {
+    width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    border: 1.5px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .icon-btn img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .icon-btn:hover img { opacity: 0.85; }
+  .icon-btn:hover { background: #b1b3ba; }
+
+  /* content panel */
+  #panel {
+    width: 720px;
+    background: #e5e7eb;
+    padding: 52px 64px 56px;
+  }
+
+  h1 {
+    font-family: sans-serif;
+    font-weight: normal;
+    color: #6b7280;
+  }
+
+  .section {
+    margin-bottom: 44px;
+  }
+  .section:last-child { margin-bottom: 0; }
+
+  h2 {
+    font-family: sans-serif;
+    font-weight: normal;
+    letter-spacing: 0.25em;
+    color: #9ca3af;
+    text-transform: uppercase;
+    margin-top: 16px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #d1d5db;
+  }
+
+  p, li {
+    font-family: sans-serif;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #374151;
+    letter-spacing: 0.03em;
+    margin-bottom: 12px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  ul li {
+    padding-left: 1.2em;
+    position: relative;
+    margin-bottom: 6px;
+  }
+  ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: #9ca3af;
+  }
+
+  .color-timeline {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .color-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: sans-serif;
+    font-size: 13px;
+    color: #4b5563;
+    letter-spacing: 0.02em;
+  }
+  .color-swatch {
+    width: 32px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .time-label {
+    color: #9ca3af;
+    font-size: 11px;
+    width: 52px;
+    flex-shrink: 0;
+  }
+
+  /* hint / hashtag */
+  #hint {
+    margin-top: 20px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 20px;
+    font-family: sans-serif;
+    font-weight: normal;
+    letter-spacing: 0.4rem;
+    line-height: 1;
+    user-select: none;
+    cursor: pointer;
+  }
+  #toast {
+    position: fixed;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(75,85,99,0.75);
+    color: #f3f4f6;
+    font: 11px/1 Georgia, serif;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <a href="index.html" class="icon-btn"><img src="image/back.svg" alt="戻る"></a>
+  <button id="btn-share" class="icon-btn"><img src="image/share.svg" alt="シェア"></button>
+</div>
+
+<div id="panel">
+
+  <h1>pao_vestige</h1>
+  <p>1分で線が消えるお絵かきアプリ</p>
+  <div class="section">
+    <h2>使い方</h2>
+    <p>
+      画面上で指やペンタブレットやマウスでお絵描きができますわ。下部のツールバーでペンと消しゴムを切り替えられましてよ。<br>
+      描いた線は時間とともに以下のように色が変化し、1分後に消えてしまいます。
+      はかない線の色の変遷をお楽しみくださいませ。
+    </p>
+    <div class="color-timeline">
+      <div class="color-step">
+        <span class="time-label">0秒</span>
+        <div class="color-swatch" style="background: rgb(120,150,170);"></div>
+      </div>
+      <div class="color-step">
+        <span class="time-label">〜3秒</span>
+        <div class="color-swatch" style="background: rgb(50,120,220);"></div>
+      </div>
+      <div class="color-step">
+        <span class="time-label">〜10秒</span>
+        <div class="color-swatch" style="background: rgb(18,30,90);"></div>
+      </div>
+      <div class="color-step">
+        <span class="time-label">〜40秒</span>
+        <div class="color-swatch" style="background: rgb(20,50,60);"></div>
+      </div>
+      <div class="color-step">
+        <span class="time-label">〜60秒</span>
+        <div class="color-swatch" style="background: #e5e7eb; border: 1px solid #d1d5db;"></div>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="section">
+    <h2>タイムラプス</h2>
+    <p>
+      描画の記録をタイムラプス動画（WebM形式）としてダウンロードできます。
+    </p>
+    <p>
+      描き始めると自動的に記録が始まりますわ。記録中は画面右上の赤い点が点滅しますの。<br>
+      右上の保存ボタンを押すと動画の準備が始まります。
+      動画の準備には少し時間がかかりますの。準備中は点が青く点滅し、完了すると緑になり自動的にダウンロードが始まります。<br>
+      クリアボタンを押すとリセットされて、またあらたな録画が始まります。すべての線が消えたときも同様にリセットされます。
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>その他</h2>
+    <p>画面下部のハッシュタグをクリックすると、タグがクリップボードにコピーされますわ。<br>
+      ぜひハッシュタグをつけてシェアしてくださいね！</p>
+  </div>
+  <div class="section">
+    <h2>姉妹版のご紹介</h2>
+      <p>
+        本アプリは、おえかきアプリ <a href="https://kurajo.ivory.ne.jp/rakugaki_pao/">rakugaki_pao</a> の姉妹版です。<br>
+        rakugaki_pao は、線画と色塗りに特化したシンプルなペイントアプリですわ。<br>
+        <br>
+        よろしければこちらもお試しくださいませ。<br>
+        <br>
+        <a href="https://kurajo.ivory.ne.jp/rakugaki_pao/">
+            <img src="image/rakugaki_pao_image.png" width="75%" height="75%">
+        </a><br>
+        <br>
+        なお、pao_vestige の利用規約は rakugaki_pao と同じものを適用いたします。<br>
+        詳しくは <a href="https://kurajo.ivory.ne.jp/rakugaki_pao/manual.html">rakugaki_pao について</a> をご覧くださいまし。<br>
+        <br>
+      </p>
+  </div>
+
+  <div class="section">
+  <H2>作者</H2>
+    <div style="float: left; width: 160px;">
+        <img src="image/cosphi_rakugaki.png">
+    </div>
+    <div>
+        <p style="font-size: larger;">
+            <b>こすふぃー</b> <a href="https://mistodon.cloud/@cosphi">@cosphi@mistodon.cloud</a><br>
+        </p>
+        <p>
+          JCJK@クラウド女学院 / mistodon.cloud 管理人<br>
+          <br>
+          連絡先: 
+          <a href="https://fedibird.com/@cosphi">mastodon(fedibird)</a> /
+          <a href="https://misskey.cloud/@cosphi">Misskey</a> /
+          <a href="https://x.com/cosine_phi">𝕏</a> 
+        </p>
+    </div>
+  </div>  
+</div>
+
+<div id="hint">#pao_vestige</div>
+<div id="toast">hashtag copied</div>
+
+<script>
+const toast = document.getElementById('toast');
+let toastTimer = null;
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+document.getElementById('hint').addEventListener('click', () => {
+  navigator.clipboard.writeText('#pao_vestige').then(() => showToast('hashtag copied'));
+});
+
+document.getElementById('btn-share').addEventListener('click', async () => {
+  const shareData = {
+    title: 'pao_vestige',
+    text: 'pao_vestige — 描いた線が消えていくお絵かきアプリ',
+    url: 'https://kurajo.ivory.ne.jp/pao_vestige/'
+  };
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        await navigator.clipboard.writeText(shareData.url);
+        showToast('URL copied');
+      }
+    }
+  } else {
+    await navigator.clipboard.writeText(shareData.url);
+    showToast('URL copied');
+  }
+});
+</script>
+</body>
+</html>

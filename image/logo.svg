@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW 2017 -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="25.4mm" height="25.4mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 2540 2540"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css">
+   <![CDATA[
+    .fil0 {fill:#D1D5DB}
+    .fil1 {fill:#E5E7EB}
+    .fil2 {fill:url(#id0);fill-rule:nonzero}
+   ]]>
+  </style>
+  <linearGradient id="id0" gradientUnits="userSpaceOnUse" x1="1987.43" y1="840.51" x2="562.26" y2="1728.82">
+   <stop offset="0" style="stop-opacity:1; stop-color:#7896AA"/>
+   <stop offset="0.0392157" style="stop-opacity:1; stop-color:#AEBECA"/>
+   <stop offset="0.0901961" style="stop-opacity:1; stop-color:#3278DC"/>
+   <stop offset="0.270588" style="stop-opacity:1; stop-color:#121E5A"/>
+   <stop offset="0.458824" style="stop-opacity:1; stop-color:#14323C"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:#E5E7EB"/>
+  </linearGradient>
+ </defs>
+ <g id="レイヤ_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <rect class="fil0" x="-4.23" y="-1.35" width="2552.7" height="2544.19"/>
+  <rect class="fil1" x="158.52" y="160.87" width="2227.19" height="2219.76"/>
+  <path class="fil2" d="M710.73 1507.75c-25.19,0 -45.61,-20.41 -45.61,-45.6 0,-25.19 20.42,-45.6 45.61,-45.6l675.1 0c17.3,-6.48 29.61,-23.17 29.61,-42.72 0,-19.97 -12.83,-36.94 -30.7,-43.12l-1053.72 0c-25.18,0 -45.6,-20.41 -45.6,-45.6 0,-25.19 20.42,-45.6 45.6,-45.6l561.51 0c17.98,-6.12 30.91,-23.14 30.91,-43.19 0,-20.44 -13.45,-37.74 -31.99,-43.54l-425.42 0c-25.18,0 -45.6,-20.41 -45.6,-45.6 0,-25.19 20.42,-45.6 45.6,-45.6l1507.95 0c25.19,0 45.6,20.41 45.6,45.6 0,25.19 -20.41,45.6 -45.6,45.6l-891.7 0c-18.53,5.8 -31.98,23.1 -31.98,43.54 0,20.05 12.93,37.07 30.91,43.19l757.76 0c25.18,0 45.6,20.41 45.6,45.6 0,25.19 -20.42,45.6 -45.6,45.6l-265.96 0c-17.87,6.18 -30.71,23.15 -30.71,43.12 0,19.55 12.32,36.24 29.62,42.72l646.75 0c25.19,0 45.61,20.41 45.61,45.6 0,25.19 -20.42,45.6 -45.61,45.6l-1507.94 0z"/>
+ </g>
+</svg>
