@@ -263,12 +263,13 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 // ---- timelapse recording ----
 const MAX_FRAMES  = 3600;   // max 60 min @ 1fps
 const SNAP_MS     = 1000;   // snapshot every 1s
-const PLAYBACK_FPS = 32;    // output fps → 16x speed
+const PLAYBACK_FPS = 32;    // output fps → 32x speed
 
 let tlFrames      = [];     // array of ImageData
 let tlRecording   = false;
 let tlLastSnap    = 0;
 let tlBlank       = true;   // true = canvas is blank, waiting for first stroke
+let tlStartTime   = null;   // Date when recording started
 
 const recDot    = document.getElementById('rec-dot');
 const btnOutput = document.getElementById('btn-output');
@@ -278,6 +279,7 @@ function tlReset() {
   tlRecording = false;
   tlLastSnap  = 0;
   tlBlank     = true;
+  tlStartTime = null;
   setDotState('');
   btnOutput.disabled = true;
 }
@@ -287,6 +289,7 @@ function tlStartIfNeeded() {
   tlBlank     = false;
   tlRecording = true;
   tlLastSnap  = performance.now();
+  tlStartTime = new Date();
   setDotState('active');
 }
 
@@ -318,10 +321,13 @@ btnOutput.addEventListener('click', async () => {
   const offCtx = off.getContext('2d');
 
   const stream = off.captureStream(PLAYBACK_FPS);
-  const mime   = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-               ? 'video/webm;codecs=vp9'
-               : 'video/webm';
-  const rec    = new MediaRecorder(stream, { mimeType: mime });
+  const mime = MediaRecorder.isTypeSupported('video/mp4')
+             ? 'video/mp4'
+             : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+             ? 'video/webm;codecs=vp9'
+             : 'video/webm';
+  const ext  = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const rec  = new MediaRecorder(stream, { mimeType: mime });
   const chunks = [];
   rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
 
@@ -330,7 +336,12 @@ btnOutput.addEventListener('click', async () => {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `pao_vestige_${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+    // ファイル名: YYYYMMDD-HHMM_pao_vestige(Xmin).ext
+    const now2   = new Date();
+    const pad    = n => String(n).padStart(2, '0');
+    const stamp  = `${now2.getFullYear()}${pad(now2.getMonth()+1)}${pad(now2.getDate())}-${pad(now2.getHours())}${pad(now2.getMinutes())}`;
+    const elapsedMin = tlStartTime ? Math.round((now2 - tlStartTime) / 60000) : 0;
+    a.download = `${stamp}_pao_vestige(${elapsedMin}min).${ext}`;
     a.click();
     URL.revokeObjectURL(url);
 
