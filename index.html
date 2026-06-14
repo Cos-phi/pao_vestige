@@ -260,28 +260,91 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 });
 
 
-// ---- timelapse recording ----
-const MAX_FRAMES  = 3600;   // max 60 min @ 1fps
-const SNAP_MS     = 1000;   // snapshot every 1s
-const PLAYBACK_FPS = 32;    // output fps → 32x speed
+// ---- timelapse recording (IndexedDB + WebP + 30fps) ----
+const SNAP_MS      = 1000;  // snapshot every 1s
+const PLAYBACK_FPS = 30;    // output fps → 30x speed
+const DB_NAME      = 'pao_vestige_tl';
+const DB_STORE     = 'frames';
 
-let tlFrames      = [];     // array of ImageData
-let tlRecording   = false;
-let tlLastSnap    = 0;
-let tlBlank       = true;   // true = canvas is blank, waiting for first stroke
-let tlStartTime   = null;   // Date when recording started
+let tlFrameCount = 0;
+let tlRecording  = false;
+let tlLastSnap   = 0;
+let tlBlank      = true;
+let tlStartTime  = null;
+let tlDB         = null;
 
 const recDot    = document.getElementById('rec-dot');
 const btnOutput = document.getElementById('btn-output');
 
-function tlReset() {
-  tlFrames    = [];
-  tlRecording = false;
-  tlLastSnap  = 0;
-  tlBlank     = true;
-  tlStartTime = null;
+// open IndexedDB
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+// clear all frames from IndexedDB
+function clearDB() {
+  return new Promise((resolve, reject) => {
+    if (!tlDB) return resolve();
+    const tx = tlDB.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).clear();
+    tx.oncomplete = resolve;
+    tx.onerror    = e => reject(e.target.error);
+  });
+}
+
+// save one WebP blob to IndexedDB
+function saveFrame(id, blob) {
+  return new Promise((resolve, reject) => {
+    const tx = tlDB.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put({ id, blob });
+    tx.oncomplete = resolve;
+    tx.onerror    = e => reject(e.target.error);
+  });
+}
+
+// read all frames in order
+function loadAllFrames() {
+  return new Promise((resolve, reject) => {
+    const tx = tlDB.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).getAll();
+    req.onsuccess = e => resolve(e.target.result.sort((a, b) => a.id - b.id));
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+// canvas → WebP blob
+function canvasToWebP() {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 1.0));
+}
+
+// init DB on load
+openDB().then(db => { tlDB = db; });
+
+function setDotState(state) {
+  recDot.classList.remove('active', 'generating', 'done');
+  if (state) recDot.classList.add(state);
+}
+
+async function tlReset() {
+  tlFrameCount = 0;
+  tlRecording  = false;
+  tlLastSnap   = 0;
+  tlBlank      = true;
+  tlStartTime  = null;
+  tlSaving     = false;
   setDotState('');
   btnOutput.disabled = true;
+  await clearDB();
 }
 
 function tlStartIfNeeded() {
@@ -293,30 +356,30 @@ function tlStartIfNeeded() {
   setDotState('active');
 }
 
-function tlTick(now) {
-  if (!tlRecording) return;
+let tlSaving = false;
+async function tlTick(now) {
+  if (!tlRecording || tlSaving) return;
   if (now - tlLastSnap < SNAP_MS) return;
   tlLastSnap = now;
-  if (tlFrames.length >= MAX_FRAMES) return;
-  tlFrames.push(ctx.getImageData(0, 0, 720, 720));
-  if (tlFrames.length === 1) btnOutput.disabled = false;
-}
-
-function setDotState(state) {
-  // state: '' | 'active' | 'generating' | 'done'
-  recDot.classList.remove('active', 'generating', 'done');
-  if (state) recDot.classList.add(state);
+  tlSaving = true;
+  try {
+    const blob = await canvasToWebP();
+    await saveFrame(tlFrameCount++, blob);
+    if (tlFrameCount === 1) btnOutput.disabled = false;
+  } finally {
+    tlSaving = false;
+  }
 }
 
 btnOutput.addEventListener('click', async () => {
-  if (tlFrames.length === 0) return;
+  if (tlFrameCount === 0) return;
 
-  // generating state
   btnOutput.disabled = true;
   setDotState('generating');
 
-  // render frames into an offscreen canvas and record with MediaRecorder
-  const off = document.createElement('canvas');
+  const frames = await loadAllFrames();
+
+  const off    = document.createElement('canvas');
   off.width = off.height = 720;
   const offCtx = off.getContext('2d');
 
@@ -326,8 +389,9 @@ btnOutput.addEventListener('click', async () => {
              : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
              ? 'video/webm;codecs=vp9'
              : 'video/webm';
-  const ext  = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
-  const rec  = new MediaRecorder(stream, { mimeType: mime });
+  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const rec = new MediaRecorder(stream, { mimeType: mime });
+  rec.start(100); // collect data every 100ms for stability
   const chunks = [];
   rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
 
@@ -336,16 +400,14 @@ btnOutput.addEventListener('click', async () => {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    // ファイル名: YYYYMMDD-HHMM_pao_vestige(Xmin).ext
-    const now2   = new Date();
-    const pad    = n => String(n).padStart(2, '0');
-    const stamp  = `${now2.getFullYear()}${pad(now2.getMonth()+1)}${pad(now2.getDate())}-${pad(now2.getHours())}${pad(now2.getMinutes())}`;
+    const now2 = new Date();
+    const pad  = n => String(n).padStart(2, '0');
+    const stamp = `${now2.getFullYear()}${pad(now2.getMonth()+1)}${pad(now2.getDate())}-${pad(now2.getHours())}${pad(now2.getMinutes())}`;
     const elapsedMin = tlStartTime ? Math.round((now2 - tlStartTime) / 60000) : 0;
     a.download = `${stamp}_pao_vestige(${elapsedMin}min).${ext}`;
     a.click();
     URL.revokeObjectURL(url);
 
-    // done state → 2.5s後に録画中へ戻す
     btnOutput.disabled = false;
     setDotState('done');
     setTimeout(() => {
@@ -353,13 +415,16 @@ btnOutput.addEventListener('click', async () => {
     }, 2500);
   };
 
-  rec.start();
-
+  // draw each frame into offscreen canvas at 30fps
   const frameDuration = 1000 / PLAYBACK_FPS;
-  for (let i = 0; i < tlFrames.length; i++) {
-    offCtx.putImageData(tlFrames[i], 0, 0);
+  for (const frame of frames) {
+    const img = await createImageBitmap(frame.blob);
+    offCtx.drawImage(img, 0, 0);
+    img.close();
     await new Promise(r => setTimeout(r, frameDuration));
   }
+  // small buffer before stop to ensure last frame is encoded
+  await new Promise(r => setTimeout(r, 200));
 
   rec.stop();
 });
